@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Gateway Idle</title>
+<title>Gateway Connecting...</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Audiowide&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
 
 <style>
 
-*{{box-sizing:border-box;}}
+*{box-sizing:border-box;}
 
-body{{
+body{
 margin:0;
 min-height:100vh;
 display:flex;
@@ -20,87 +20,83 @@ justify-content:center;
 align-items:center;
 padding:20px;
 font-family:'Source Code Pro', monospace;
-background:linear-gradient(-45deg,#050505,#0f2027,#000000,#111);
+background:linear-gradient(-45deg,#0f2027,#203a43,#2c5364,#000000);
 background-size:400% 400%;
-animation:bg 12s ease infinite;
+animation:bg 10s ease infinite;
 color:white;
-}}
+}
 
-@keyframes bg{{
-0%{{background-position:0% 50%;}}
-50%{{background-position:100% 50%;}}
-100%{{background-position:0% 50%;}}
-}}
+@keyframes bg{
+0%{background-position:0% 50%;}
+50%{background-position:100% 50%;}
+100%{background-position:0% 50%;}
+}
 
-.card{{
+.card{
 width:100%;
 max-width:420px;
-padding:32px;
-border-radius:14px;
-background:rgba(255,255,255,0.05);
-border:1px solid rgba(255,255,255,0.08);
 backdrop-filter:blur(12px);
+background:rgba(255,255,255,0.05);
+padding:30px;
+border-radius:16px;
+border:1px solid rgba(255,255,255,0.1);
 box-shadow:0 0 30px rgba(0,0,0,0.6);
-text-align:center;
-}}
+}
 
-h1{{
-font-family:'Audiowide', cursive;
-color:#ff5555;
+h2{
 margin-top:0;
-}}
+margin-bottom:10px;
+font-family:'Audiowide', cursive;
+color:#00ff88;
+font-size:26px;
+}
 
-.status{{
-margin-top:10px;
+.status{
+color:#00ff88;
+font-weight:600;
 font-size:14px;
-color:#ff7777;
-}}
+}
 
-.info{{
+.loader{
+margin:20px auto;
+width:40px;
+height:40px;
+border:4px solid rgba(255,255,255,0.2);
+border-top:4px solid #00ff88;
+border-radius:50%;
+animation:spin 1s linear infinite;
+}
+
+@keyframes spin{
+0%{transform:rotate(0deg);}
+100%{transform:rotate(360deg);}
+}
+
+.info{
 margin-top:20px;
-background:rgba(0,0,0,0.35);
-padding:14px;
-border-radius:10px;
 text-align:left;
 font-size:13px;
 line-height:1.6;
-}}
+background:rgba(0,0,0,0.35);
+padding:15px;
+border-radius:10px;
+word-break:break-word;
+}
 
-.log{{
-margin-top:16px;
+.log{
+margin-top:15px;
 font-size:12px;
-color:#ffaa66;
+color:#9affc9;
 height:80px;
 overflow:hidden;
-text-align:left;
-}}
+word-break:break-word;
+}
 
-.clock{{
+.countdown{
 margin-top:15px;
-font-size:13px;
-color:#aaa;
-}}
-
-.retry{{
-margin-top:15px;
-color:#ff7777;
 font-size:14px;
-}}
-
-button{{
-margin-top:18px;
-padding:10px 18px;
-border:none;
-border-radius:8px;
-background:#ff4444;
-color:white;
-font-family:'Source Code Pro';
-cursor:pointer;
-}}
-
-button:hover{{
-background:#ff2222;
-}}
+color:#00ff88;
+}
 
 </style>
 </head>
@@ -109,73 +105,75 @@ background:#ff2222;
 
 <div class="card">
 
-<h1>🚫 Gateway Offline</h1>
+<h2>🚀 YOCRRZ Gateway</h2>
+<p class="status">Tunnel Status: ACTIVE</p>
 
-<p class="status">Tunnel Status: INACTIVE</p>
+<div class="loader"></div>
 
 <div class="info">
-Gateway Node: YOCRRZ<br>
-Server State: Offline<br>
-Monitoring: Enabled<br>
-Next Check: <span id="retry">10</span>s
+Session ID: <span id="session"></span><br>
+IP Address: <span id="ip">detecting...</span><br>
+Browser: <span id="browser"></span><br>
+Platform: <span id="platform"></span><br>
+Language: <span id="lang"></span>
 </div>
 
 <div class="log" id="log"></div>
 
-<div class="clock">
-Local Time: <span id="time"></span>
+<div class="countdown">
+Redirecting in <span id="timer">5</span> seconds...
 </div>
-
-<div class="retry">
-Retrying connection automatically...
-</div>
-
-<button onclick="location.reload()">Retry Now</button>
 
 </div>
 
 <script>
 
-function updateClock(){{
-const now = new Date();
-document.getElementById("time").textContent =
-now.toLocaleTimeString();
-}}
+const session = Math.random().toString(36).substring(2,10).toUpperCase();
+document.getElementById("session").textContent = session;
 
-setInterval(updateClock,1000);
-updateClock();
+document.getElementById("browser").textContent = navigator.userAgent;
+document.getElementById("platform").textContent = navigator.platform;
+document.getElementById("lang").textContent = navigator.language;
 
-const logs=[
-"Gateway monitoring enabled",
-"Waiting for active tunnel...",
-"No cloudflare route detected",
-"Server node unreachable",
-"Retry scheduled..."
+fetch("https://api.ipify.org?format=json")
+.then(res => res.json())
+.then(data => {
+document.getElementById("ip").textContent = data.ip;
+});
+
+const logs = [
+"Initializing gateway...",
+"Generating secure session...",
+"Detecting network node...",
+"Connecting to Cloudflare tunnel...",
+"Handshake complete",
+"Preparing redirect..."
 ];
 
-let i=0;
+let logIndex = 0;
 
-function showLog(){{
-if(i<logs.length){{
-document.getElementById("log").innerHTML+="> "+logs[i]+"<br>";
-i++;
-setTimeout(showLog,700);
-}}
-}}
+function showLog(){
+if(logIndex < logs.length){
+document.getElementById("log").innerHTML += "> " + logs[logIndex] + "<br>";
+logIndex++;
+setTimeout(showLog,500);
+}
+}
 
 showLog();
 
-let retry=10;
+let time = 5;
 
-setInterval(() => {{
-retry--;
-document.getElementById("retry").textContent=retry;
+const timer = setInterval(() => {
+time--;
+document.getElementById("timer").textContent = time;
 
-if(retry<=0){{
-location.reload();
-}}
+if(time === 0){
+clearInterval(timer);
+window.location.href = "https://colorado-aim-rca-came.trycloudflare.com";
+}
 
-}},1000);
+},1000);
 
 </script>
 
